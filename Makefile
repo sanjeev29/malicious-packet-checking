@@ -2,8 +2,8 @@
 CC = g++
 
 # Define compiler flags
-CFLAGS = -g
-SRC = Source/RBFGen.cpp Source/sha256.cpp Source/sha256.h
+CFLAGS = -g -Wall
+SRC = Source/main.cpp Source/sha256.cpp Source/sha256.h
 
 RBFGen: $(SRC)
 	echo "Creating $@"

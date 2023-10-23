@@ -13,7 +13,55 @@ using std:: stoi;
 
 const bool DEBUG = true; // Used for debugging
 
-int hash(string key, string input); // Declare function for use in main()
+class RBF {
+    public:
+        int m;
+        int RBF_arr[];
+        
+        // Constructor
+        RBF(int user_input) {
+            m = user_input;
+            // Initialze RBF to all zeros
+            for(int i = 0; i < m; i++) {
+                RBF_arr[i] = 0;
+            }            
+        }
+
+    /**
+     * h1 is one of 8 hash functions that will produce the indexes for the RBF.
+     * @param key 1 through 8
+     * @param input "Indeed, the “input” should be a column number in string format" (on assignment description)
+     * @param m needed for modulus calculation; function needs to be refactored I think
+     * @return index
+    */
+    // In theory, this would work. In reality, I have not tested it much yet
+    int h1(string key, string input) {
+        int index = -1; // If it returns -1, we know the hash failed.
+
+        // Perform key||input, || indicates concatentation
+        string input_cat = key + input;
+
+        // Begin SHA256(key||ip) (mod m)
+        string sha_no_trunc = sha256(input_cat);
+        
+        // Truncate
+        string trunc_output_str = sha_no_trunc.substr(sha_no_trunc.length() - 5);
+        int trunc_output_int = stoi(trunc_output_str, 0, 16);
+
+        // Modulus
+        index = trunc_output_int % m;
+
+        if(DEBUG) {
+            cout << "size: " << sha_no_trunc.length() << endl;
+            cout << "sha256('"<< input << "'):" << sha_no_trunc << endl;
+            cout << "trunc_val: " << trunc_output_str.length() << " " << trunc_output_str << endl;
+            cout << "int: " << trunc_output_int << endl;
+            cout << "index: " << index << endl;
+        }
+
+        return index;   
+    }
+};
 
 /**
  * Proj1.pdf, item c description
@@ -30,72 +78,25 @@ int hash(string key, string input); // Declare function for use in main()
 */
 int main(int argc, char *argv[])
 {
+    // Code now requires 2 inputs
     if(argc < 3) {
-        cout << "USAGE <RBFGen> <m> <output_file_name>" << endl;
+        cout << "USAGE: <RBFGen> <m> <output_file_name>" << endl;
         return -1;
     }
     
     string m = argv[1];
-    string k = "0";
+    int RBF_init_val;
 
-    // Hash a single value for testing
-    int hash_val = hash(k, "3", m);
-
-    // Initialize all of the RBF here
-
-
-    /* IMPLEMENTED IN CODE BELOW in hash() */
-    // string input = "grape!";
-    // string output1 = sha256(input);
-
-    // // The output of SHA256 hash is 256-bit, i.e. 64 characters
-    // // Using the least significant 20-bit from the SHA256 hash output
-    // string truncated_output =  output1.substr(output1.length() - 5);
-
-    // // Convert 20-bit binary string to integer
-    // int truncated_output_int = stoi(truncated_output, 0, 16);
-
-    // if(DEBUG) {
-    //     cout << "size: " << output1.length() << endl;
-    //     cout << "sha256('"<< input << "'):" << output1 << endl;
-    //     cout << "trunc_val: " << truncated_output.length() << " " << truncated_output << endl;
-    //     cout << "int: " << truncated_output_int << endl;
-    // }
-    
-    return 0;
-}
-
-/**
- * hash will produce the indexes for the RBF.
- * @param key 1 through 8
- * @param input "Indeed, the “input” should be a column number in string format"
- * @param m needed for modulus calculation; function needs to be refactored I think
- * @return index
-*/
-// In theory, this would work. In reality, I have not tested it much yet
-int hash(string key, string input, string m) {
-    int index = -1; // If it returns -1, we know the hash failed.
-
-    // Perform key||input, || indicates concatentation
-    string input_cat = key + input;
-
-    // Begin SHA256(key||ip) (mod m)
-    string sha_no_trunc = sha256(input_cat);
-    
-    // Truncate
-    string trunc_output_str = sha_no_trunc.substr(sha_no_trunc.length() - 5);
-    int trunc_output_int = stoi(trunc_output_str, 0, 16);
-
-    // Modulus
-    index = trunc_output_int % stoi(m);
-
-    if(DEBUG) {
-        cout << "size: " << sha_no_trunc.length() << endl;
-        cout << "sha256('"<< input << "'):" << sha_no_trunc << endl;
-        cout << "trunc_val: " << trunc_output_str.length() << " " << trunc_output_str << endl;
-        cout << "int: " << trunc_output_int << endl;
-        cout << "index: " << index << endl;
+    // Catch if user entered invalid input
+    try {
+        RBF_init_val = stoi(m);
+    } 
+    catch(...) {
+        cout << "ERROR: Cannot convert " << m << " to an integer" << endl;
+        return -1;
     }
+        
+    RBF RBFGen(RBF_init_val);
 
-    return index;   
+    return 0;
 }
