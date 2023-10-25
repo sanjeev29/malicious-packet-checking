@@ -18,7 +18,6 @@ class RBF {
         int m;
         vector<int> RBFGen;
 
-        
         // Constructor
         RBF(int user_input) {
             m = user_input;
@@ -60,7 +59,6 @@ class RBF {
                 if(DEBUG_VERBOSE)
                     cout<<endl; 
             }
-
             
             // Print array after insertion
             if(DEBUG) {
@@ -69,50 +67,7 @@ class RBF {
                     cout << RBFGen.at(i);
                 }
                 cout<<endl;
-            }
-            
-
-            // USED FOR DEBUGGING -- print all IP addresses to IPGen.txt
-            fstream ip_debug;
-            ip_debug.open("Results/IPGen.txt", fstream::out | fstream::trunc); // Open new file or wipe existing file to overwrite
-            
-            
-            // Variables needed for generating "random" IP's
-            string ip = "192.168.";
-            int w=0, x=0, y=0, z=0;         // Used for randomly generating each of the spots  
-            string full_ip = "";            // Store 192.168.w.xyz in here
-            
-            // Embed 10,000 IP Addresses in the RBF
-            // There is probably a recursive way to do this, 
-            // but I decided to go with the ugly but effective if-statement approach
-            for(int i = 0; i < 10000; i++) {
-                full_ip = ip  + to_string(w) + "." + to_string(x) + to_string(y) + to_string(z);
-                ip_debug << full_ip << endl;
-                
-
-                if(z < 9) {
-                    z++;
-                } else {
-                    z = 0;
-                    if(y < 9) {
-                        y++;
-                    } else {
-                        y = 0;
-                        if(x < 9) {
-                            x++;
-                        } else {
-                            x = 0;
-                            if(w < 9) {
-                                w++;
-                            } else {
-                                w = 0;
-                            }
-                        }
-                    }
-                }
-                full_ip.clear();               
-            }
-            ip_debug.close();           
+            }           
         }
         
 
@@ -176,6 +131,85 @@ class RBF {
 };
 
 /**
+ * Generate all the bad IP addresses
+*/
+vector<string> generate_IPs() {
+    vector<string> bad_ips;
+
+    // USED FOR DEBUGGING -- print all IP addresses to IPGen.txt
+    fstream ip_debug;
+    ip_debug.open("Results/IPGen.txt", fstream::out | fstream::trunc); // Open new file or wipe existing file to overwrite
+    
+    // Variables needed for generating "random" IP's
+    string ip = "192.168.";
+    int w=0, x=0, y=0, z=0;         // Used for randomly generating each of the spots  
+    string full_ip = "";            // Store 192.168.w.xyz in here
+    
+    // Embed 10,000 IP Addresses in the RBF
+    // There is probably a recursive way to do this, 
+    // but I decided to go with the ugly but effective if-statement approach
+    for(int i = 0; i < 10000; i++) {
+        full_ip = ip  + to_string(w) + "." + to_string(x) + to_string(y) + to_string(z);
+        bad_ips.emplace_back(full_ip);
+
+        ip_debug << full_ip << endl;
+        
+
+        if(z < 9) {
+            z++;
+        } else {
+            z = 0;
+            if(y < 9) {
+                y++;
+            } else {
+                y = 0;
+                if(x < 9) {
+                    x++;
+                } else {
+                    x = 0;
+                    if(w < 9) {
+                        w++;
+                    } else {
+                        w = 0;
+                    }
+                }
+            }
+        }
+        full_ip.clear();               
+    }
+    ip_debug.close();
+
+    return bad_ips;
+}
+            
+/**
+ * Insert a single IP
+ * @param curr_RBF
+ * @param curr_IP
+ * @return 1 on success; 0 on failure
+*/
+void insert(RBF curr_RBF, string IP, int i){
+    int h_i, row, col;
+    
+
+    // H(h_key(i||IP)) determines chosen cell
+    
+    // Calculate h_i
+    h_i = curr_RBF.h_key(to_string(i), IP);
+    if(DEBUG)
+        cout << "h_i: " << h_i << endl;
+          
+}
+
+/**
+ * Inserts a ll bad IPs
+ * 
+*/
+void insert_bad_IPs() {
+
+
+}
+/**
  * Proj1.pdf, item c description
  * 1. The program uses m as the RBF length. Get m as input
  * 
@@ -219,6 +253,14 @@ int main(int argc, char *argv[])
 
     // Create RBF
     RBF RBFGen(RBF_init_val);
+
+    // Generate IPs
+    vector<string> IPs = generate_IPs();
+    string IP_addr = IPs.at(0);
+    if(DEBUG)
+        cout << IP_addr << endl;
+    
+    // Attempt inserting 1 IP address
 
     // Write RBF out outfile in Results folder
     fstream output;
