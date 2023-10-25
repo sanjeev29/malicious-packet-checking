@@ -7,22 +7,16 @@
 #include <stdbool.h>
 
 #include "sha256.h"
- 
-using std::string;
-using std::cout;
-using std::fstream;
-using std::cin;
-using std::endl;
-using std::stoi;
-using std::map;
+
+// Changed to this to simplify it
+using namespace std;
 
 const bool DEBUG = true; // Used for debugging
-
+const bool DEBUG_VERBOSE = false; // Used for extensive debugging
 class RBF {
     public:
         int m;
-        std::vector<int> RBFGen;
-        map<string, int> bad_IP_Map;
+        vector<int> RBFGen;
 
         
         // Constructor
@@ -33,22 +27,45 @@ class RBF {
             
             // Initialize RBF
             for(int j = 0; j < m; j++) {
-                // Calculate chosen index using H(j)
+                // Calculate chosen row index using H(j)
                 int chosen;
-                chosen = H(std::to_string(j));
+                chosen = H(to_string(j));
+                
+                if(DEBUG_VERBOSE)
+                    cout << "Chosen is " << chosen << endl;
+                
+                /**
+                 * CHOSEN CELLS ARE ZERO
+                 * CASE 1: H(j)=0
+                 *      RBF[0][j]=0
+                 *      RBF[1-0][j]=1
+                 * CASE 2: H(j)=1
+                 *      RBF[0][j]=1
+                 *      RBF[1][j]=0
+                */
+                if(chosen == 0) {
+                    if(DEBUG_VERBOSE) {
+                        cout << "RBF[0][" << j << "] = 0"<<endl;
+                        cout << "RBF[1][" << j << "] = 1"<<endl;
+                    }
+                    RBFGen.at(j) = 0;
+                } else {
+                    if(DEBUG_VERBOSE){
+                        cout << "RBF[0][" << j << "] = 1"<<endl;
+                        cout << "RBF[1][" << j << "] = 0"<<endl;
+                    }
+                    RBFGen.at(j) = 1;
+                }
 
-                // RBF[H(j)]
-                RBFGen.at(chosen) = 0;
-
-                // RBF[1 - H(j)], check bounds to make sure it does not throw an error
-                if(chosen > 0)
-                    RBFGen.at(1 - chosen) = 1;
+                if(DEBUG_VERBOSE)
+                    cout<<endl; 
             }
 
             
             // Print array after insertion
             if(DEBUG) {
-                for(int i = 0; i < RBFGen.capacity() - 1; i++) {
+                cout<<"RBF Init: ";
+                for(int i = 0; i < int(RBFGen.capacity()); i++) {
                     cout << RBFGen.at(i);
                 }
                 cout<<endl;
@@ -57,44 +74,43 @@ class RBF {
 
             // USED FOR DEBUGGING -- print all IP addresses to IPGen.txt
             fstream ip_debug;
-            ip_debug.open("IPGen.txt", std::ios::out | std::ofstream::trunc); // Open new file or wipe existing file to overwrite
+            ip_debug.open("Results/IPGen.txt", fstream::out | fstream::trunc); // Open new file or wipe existing file to overwrite
             
             
             // Variables needed for generating "random" IP's
             string ip = "192.168.";
-            int w, x, y, z = 0;         // Used for randomly generating each of the spots  
-            string full_ip = "";        // Store 192.168.w.xyz in here
-            bool inserted = false;
-            bool temp = false;
-
+            int w=0, x=0, y=0, z=0;         // Used for randomly generating each of the spots  
+            string full_ip = "";            // Store 192.168.w.xyz in here
+            
             // Embed 10,000 IP Addresses in the RBF
+            // There is probably a recursive way to do this, 
+            // but I decided to go with the ugly but effective if-statement approach
             for(int i = 0; i < 10000; i++) {
-                // Use a HashMap property that all keys must be unique to add a new "random" IP that was not already added
-                while(!inserted) {
-                    // Randomize the entry
-                    w = rand() % 10;
-                    x = rand() % 10;
-                    y = rand() % 10;
-                    z = rand() % 10;
-
-                    // Concatenate the next couple places
-                    full_ip = ip  + std::to_string(w) + "." + std::to_string(x) + std::to_string(y) + std::to_string(z);
-
-                    // Try to insert into HashMap
-                    // If true, it has successfully generated a new "random" IP to be inserted into the RBF
-                    if((temp = bad_IP_Map.insert({full_ip, i}).second)) {
-                        // INSERT IP INTO HASH MAP HERE
+                full_ip = ip  + to_string(w) + "." + to_string(x) + to_string(y) + to_string(z);
+                ip_debug << full_ip << endl;
                 
-                        ip_debug << full_ip << endl;    // DEBUG: write to IPGen.txt
-                        inserted = temp;                // Break loop
-                    }
-                    full_ip.clear();
-                }
 
-                // Reset
-                inserted = false;
-                temp = false;
-                full_ip.clear();           
+                if(z < 9) {
+                    z++;
+                } else {
+                    z = 0;
+                    if(y < 9) {
+                        y++;
+                    } else {
+                        y = 0;
+                        if(x < 9) {
+                            x++;
+                        } else {
+                            x = 0;
+                            if(w < 9) {
+                                w++;
+                            } else {
+                                w = 0;
+                            }
+                        }
+                    }
+                }
+                full_ip.clear();               
             }
             ip_debug.close();           
         }
@@ -194,7 +210,7 @@ int main(int argc, char *argv[])
     // Validate user input for output file name
     string filename = argv[2];
     try {
-        if(filename.find(".txt") == std::string::npos)
+        if(filename.find(".txt") == string::npos)
             throw(filename);
     } catch (string bad_filename) {
         cout << "ERROR: Must provide valid output file name" << endl;
@@ -206,7 +222,7 @@ int main(int argc, char *argv[])
 
     // Write RBF out outfile in Results folder
     fstream output;
-    output.open("Results/"+ filename+".txt", std::ios::out | std::ios::trunc);
+    output.open("Results/"+ filename, fstream::out | fstream::trunc);
     output << "Eventually we will put our RBF here :)\n";
     output.close();
 
