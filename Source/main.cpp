@@ -102,7 +102,7 @@ class RBF {
          * @param m needed for modulus calculation; function needs to be refactored I think
          * @return index
         */
-        int h_key(string key, string input) {
+        int h_i(string key, string input) {
             int index = -1; // If it returns -1, we know the hash failed.
 
             // Perform key||input, || indicates concatentation
@@ -189,16 +189,40 @@ vector<string> generate_IPs() {
  * @return 1 on success; 0 on failure
 */
 void insert(RBF curr_RBF, string IP, int i){
-    int h_i, row, col;
+    int H, h_i, row, col;
     
-
     // H(h_key(i||IP)) determines chosen cell
     
     // Calculate h_i
-    h_i = curr_RBF.h_key(to_string(i), IP);
+    h_i = curr_RBF.h_i(to_string(i), IP);
     if(DEBUG)
         cout << "h_i: " << h_i << endl;
-          
+    
+    // Calculate H(h_i)
+    H = curr_RBF.H(to_string(h_i));
+
+     /**
+     * CHOSEN CELLS ARE ONE
+     * CASE 1: H(j)=0
+     *      RBF[0][j]=1
+     *      RBF[1-0][j]=0
+     * CASE 2: H(j)=1
+     *      RBF[0][j]=0
+     *      RBF[1][j]=1
+    */
+    if(H == 0) {
+        if(DEBUG_VERBOSE) {
+            cout << "RBF[0][" << i << "] = 0"<<endl;
+            cout << "RBF[1][" << i << "] = 1"<<endl;
+        }
+        curr_RBF.RBFGen.at(i) = 1;
+    } else {
+        if(DEBUG_VERBOSE){
+            cout << "RBF[0][" << i << "] = 1"<<endl;
+            cout << "RBF[1][" << i << "] = 0"<<endl;
+        }
+        curr_RBF.RBFGen.at(i) = 0;
+    }
 }
 
 /**
@@ -209,6 +233,7 @@ void insert_bad_IPs() {
 
 
 }
+
 /**
  * Proj1.pdf, item c description
  * 1. The program uses m as the RBF length. Get m as input
@@ -261,11 +286,17 @@ int main(int argc, char *argv[])
         cout << IP_addr << endl;
     
     // Attempt inserting 1 IP address
+    insert(RBFGen, IP_addr, 0);
 
     // Write RBF out outfile in Results folder
     fstream output;
     output.open("Results/"+ filename, fstream::out | fstream::trunc);
-    output << "Eventually we will put our RBF here :)\n";
+
+    // Put the RBF here
+    output << "Final output: \n";
+    for(int i = 0; i < RBF_init_val; i++) {
+        output << RBFGen.RBFGen.at(i);
+    }
     output.close();
 
     return 0;
