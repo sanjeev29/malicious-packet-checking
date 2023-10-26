@@ -13,13 +13,11 @@ using namespace std;
 
 const bool DEBUG = false; // Used for debugging
 const bool DEBUG_VERBOSE = false; // Used for extensive debugging
-const int RBF_ROW_COUNT = 3; // The third row tracks the number of entries for a particular column
+const int RBF_MAX_ROWS = 3; // The third row tracks the number of entries for a particular column
 
 class RBF {
     public:
         int m;
-
-        // vector<int> RBFGen;
 
         // Initialize a 2D vector
         vector<vector<int> > RBFGen;
@@ -28,11 +26,8 @@ class RBF {
         RBF(int user_input) {
             m = user_input;
 
-            // Resize vector
-            // RBFGen.resize(m);
-
             // Resize the 2D vector
-            RBFGen.resize(RBF_ROW_COUNT, vector<int>(m));
+            RBFGen.resize(RBF_MAX_ROWS, vector<int>(m));
             
             // Initialize RBF
             for(int j = 0; j < m; j++) {
@@ -55,26 +50,6 @@ class RBF {
 
                 RBFGen.at(chosen).at(j) = 0;
                 RBFGen.at(1 - chosen).at(j) = 1;
-
-                // if(chosen == 0) {
-                //     if(DEBUG_VERBOSE) {
-                //         cout << "RBF[0][" << j << "] = 0"<<endl;
-                //         cout << "RBF[1][" << j << "] = 1"<<endl;
-                //     }
-                //     // RBFGen.at(j) = 0;
-
-                //     RBFGen.at(chosen).at(j) = 0;
-                //     RBFGen.at(1 - chosen).at(j) = 1;
-
-                // } else {
-                //     if(DEBUG_VERBOSE){
-                //         cout << "RBF[0][" << j << "] = 1"<<endl;
-                //         cout << "RBF[1][" << j << "] = 0"<<endl;
-                //     }
-                //     // RBFGen.at(j) = 1;
-
-                //     RBFGen.at(1 - chosen).at(j) = 1;
-                // }
 
                 if(DEBUG_VERBOSE)
                     cout<<endl; 
@@ -102,17 +77,19 @@ class RBF {
             int val = -1;
 
             // Perform key||input, || indicates concatentation
-            string input_cat = "key" + input;
+            string input_cat = "0" + input;
 
             // Begin SHA256(key||ip) (mod m)
             string sha_no_trunc = sha256(input_cat);
             
             // Truncate
-            string trunc_output_str = sha_no_trunc.substr(sha_no_trunc.length() - 5);
-            int trunc_output_int = stoi(trunc_output_str, 0, 16);
+            int K = 20;
+
+            string lsbHexStr = sha_no_trunc.substr(sha_no_trunc.length() - K / 4);
+            int lsbInt = stoi(lsbHexStr, 0, 16);
 
             // Modulus
-            val = trunc_output_int % 2;
+            val = lsbInt % 2;
 
             return val;
         }
@@ -133,18 +110,21 @@ class RBF {
             // Begin SHA256(key||ip) (mod m)
             string sha_no_trunc = sha256(input_cat);
             
+            // Consider least significant 20-bit
+            int K = 20;
+
             // Truncate
-            string trunc_output_str = sha_no_trunc.substr(sha_no_trunc.length() - 5);
-            int trunc_output_int = stoi(trunc_output_str, 0, 16);
+            string lsbHexStr = sha_no_trunc.substr(sha_no_trunc.length() - K / 4);
+            int lsbInt = stoi(lsbHexStr, 0, 16);
 
             // Modulus
-            index = trunc_output_int % m;
+            index = lsbInt % m;
 
             if(DEBUG) {
                 cout << "size: " << sha_no_trunc.length() << endl;
                 cout << "sha256('"<< input << "'):" << sha_no_trunc << endl;
-                cout << "trunc_val: " << trunc_output_str.length() << " " << trunc_output_str << endl;
-                cout << "int: " << trunc_output_int << endl;
+                cout << "trunc_val: " << lsbHexStr.length() << " " << lsbHexStr << endl;
+                cout << "int: " << lsbHexStr << endl;
                 cout << "index: " << index << endl;
             }
 
@@ -236,36 +216,14 @@ void insert(RBF &curr_RBF, string IP, int i){
      **/
 
     // Insert only if the number of entries for the column is 0
-    if (curr_RBF.RBFGen[RBF_ROW_COUNT - 1][h_i] == 0) {
+    if (curr_RBF.RBFGen[RBF_MAX_ROWS - 1][h_i] == 0) {
         curr_RBF.RBFGen[H][h_i] = 1;
         curr_RBF.RBFGen[1 - H][h_i] = 0;
 
         // Increment entry to 1 at the given column to
         // indicate an IP is inserted
-        curr_RBF.RBFGen[RBF_ROW_COUNT - 1][h_i] = 1;
-
+        curr_RBF.RBFGen[RBF_MAX_ROWS - 1][h_i] = 1;
     }
-
-    // if(H == 0) {
-    //     if(DEBUG_VERBOSE) {
-    //         cout << "RBF[0][" << i << "] = 0"<<endl;
-    //         cout << "RBF[1][" << i << "] = 1"<<endl;
-    //     }
-    //     cout << curr_RBF.RBFGen[H][h_i] << endl;
-
-    //     // curr_RBF.RBFGen.at(i) = 1;
-    //     curr_RBF.RBFGen[H][h_i] = 1;
-
-    //     cout << curr_RBF.RBFGen[H][h_i] << endl;
-
-    // } else {
-    //     if(DEBUG_VERBOSE){
-    //         cout << "RBF[0][" << i << "] = 1"<<endl;
-    //         cout << "RBF[1][" << i << "] = 0"<<endl;
-    //     }
-    //     // curr_RBF.RBFGen.at(i) = 0;
-    //     curr_RBF.RBFGen[1 - H][h_i] = 0;
-    // }
 }
 
 /**
@@ -294,9 +252,6 @@ void insert_bad_IPs(RBF &curr_RBF, vector<string> IPs) {
             insert(curr_RBF, IPs[i], k);
         }
     }
-
-    // TODO: Testing
-    output_to_file("Results/10test.txt", curr_RBF.RBFGen[0]);
 }
 
 /**
@@ -346,42 +301,21 @@ int main(int argc, char *argv[])
 
     // Generate IPs
     vector<string> IPs = generate_IPs();
-    cout << "IPs size: " << IPs.size() << endl;
-
-    // string IP_addr = IPs.at(0);
-    // if(DEBUG)
-    //     cout << IP_addr << endl;
-    
-    // Attempt inserting 1 IP address
-    // insert(RBFGen, IP_addr, 0);
 
     // Insert 10,000 IPs to RBF
     insert_bad_IPs(RBFGen, IPs);
-    cout << "RBFGen size: " << RBFGen.RBFGen.size() << endl;
 
     // Insert RBF to <filename>.txt
     output_to_file("Results/"+filename, RBFGen.RBFGen[0]);
 
-    // Write RBF out outfile in Results folder
-    // fstream output;
-    // output.open("Results/"+ filename, fstream::out | fstream::trunc);
-
-    // Put the RBF here
-    // output << "Final output: \n";
-    // for(int i = 0; i < RBF_init_val; i++) {
-    //     output << RBFGen.RBFGen.at(i);
-    // }
-
     if (DEBUG) {
-        for(int i = 0; i < RBF_ROW_COUNT; i++) {
+        for(int i = 0; i < RBF_MAX_ROWS; i++) {
             for (int j = 0; j < RBF_init_val; j++) {
                 cout << RBFGen.RBFGen[i][j] << " ";
             }
             cout << endl;
         }
     }
-
-    // output.close();
 
     return 0;
 }
