@@ -11,7 +11,7 @@
 // Changed to this to simplify it
 using namespace std;
 
-const bool DEBUG = true; // Used for debugging
+const bool DEBUG = false; // Used for debugging
 const bool DEBUG_VERBOSE = false; // Used for extensive debugging
 const int RBF_ROW_COUNT = 3; // The third row tracks the number of entries for a particular column
 
@@ -211,7 +211,7 @@ vector<string> generate_IPs() {
  * @return 1 on success; 0 on failure
 */
 void insert(RBF &curr_RBF, string IP, int i){
-    int H, h_i, row, col;
+    int H, h_i;
     
     // H(h_key(i||IP)) determines chosen cell
     
@@ -269,12 +269,34 @@ void insert(RBF &curr_RBF, string IP, int i){
 }
 
 /**
- * Inserts a ll bad IPs
+ * Output data to a file
+*/
+
+void output_to_file(string filePath, vector<int> data) {
+    fstream output;
+    output.open(filePath, fstream::out | fstream::trunc);
+
+    // Output given data to a file
+    for(int i = 0; i < data.size(); i++) {
+        output << data[i];
+    }
+
+    output.close();
+}
+
+/**
+ * Inserts all bad IPs
  * 
 */
-void insert_bad_IPs() {
+void insert_bad_IPs(RBF &curr_RBF, vector<string> IPs) {
+    for (int i = 0; i < IPs.size(); i++) {
+        for (int k = 1; k < 9; k++) {
+            insert(curr_RBF, IPs[i], k);
+        }
+    }
 
-
+    // TODO: Testing
+    output_to_file("Results/10test.txt", curr_RBF.RBFGen[0]);
 }
 
 /**
@@ -324,19 +346,28 @@ int main(int argc, char *argv[])
 
     // Generate IPs
     vector<string> IPs = generate_IPs();
-    string IP_addr = IPs.at(0);
-    if(DEBUG)
-        cout << IP_addr << endl;
+    cout << "IPs size: " << IPs.size() << endl;
+
+    // string IP_addr = IPs.at(0);
+    // if(DEBUG)
+    //     cout << IP_addr << endl;
     
     // Attempt inserting 1 IP address
-    insert(RBFGen, IP_addr, 0);
+    // insert(RBFGen, IP_addr, 0);
+
+    // Insert 10,000 IPs to RBF
+    insert_bad_IPs(RBFGen, IPs);
+    cout << "RBFGen size: " << RBFGen.RBFGen.size() << endl;
+
+    // Insert RBF to <filename>.txt
+    output_to_file("Results/"+filename, RBFGen.RBFGen[0]);
 
     // Write RBF out outfile in Results folder
-    fstream output;
-    output.open("Results/"+ filename, fstream::out | fstream::trunc);
+    // fstream output;
+    // output.open("Results/"+ filename, fstream::out | fstream::trunc);
 
     // Put the RBF here
-    output << "Final output: \n";
+    // output << "Final output: \n";
     // for(int i = 0; i < RBF_init_val; i++) {
     //     output << RBFGen.RBFGen.at(i);
     // }
@@ -350,7 +381,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    output.close();
+    // output.close();
 
     return 0;
 }
