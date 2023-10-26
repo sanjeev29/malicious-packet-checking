@@ -13,16 +13,26 @@ using namespace std;
 
 const bool DEBUG = true; // Used for debugging
 const bool DEBUG_VERBOSE = false; // Used for extensive debugging
+const int RBF_ROW_COUNT = 3; // The third row tracks the number of entries for a particular column
+
 class RBF {
     public:
         int m;
-        vector<int> RBFGen;
+
+        // vector<int> RBFGen;
+
+        // Initialize a 2D vector
+        vector<vector<int> > RBFGen;
 
         // Constructor
         RBF(int user_input) {
             m = user_input;
+
             // Resize vector
-            RBFGen.resize(m);
+            // RBFGen.resize(m);
+
+            // Resize the 2D vector
+            RBFGen.resize(RBF_ROW_COUNT, vector<int>(m));
             
             // Initialize RBF
             for(int j = 0; j < m; j++) {
@@ -42,19 +52,29 @@ class RBF {
                  *      RBF[0][j]=1
                  *      RBF[1][j]=0
                 */
-                if(chosen == 0) {
-                    if(DEBUG_VERBOSE) {
-                        cout << "RBF[0][" << j << "] = 0"<<endl;
-                        cout << "RBF[1][" << j << "] = 1"<<endl;
-                    }
-                    RBFGen.at(j) = 0;
-                } else {
-                    if(DEBUG_VERBOSE){
-                        cout << "RBF[0][" << j << "] = 1"<<endl;
-                        cout << "RBF[1][" << j << "] = 0"<<endl;
-                    }
-                    RBFGen.at(j) = 1;
-                }
+
+                RBFGen.at(chosen).at(j) = 0;
+                RBFGen.at(1 - chosen).at(j) = 1;
+
+                // if(chosen == 0) {
+                //     if(DEBUG_VERBOSE) {
+                //         cout << "RBF[0][" << j << "] = 0"<<endl;
+                //         cout << "RBF[1][" << j << "] = 1"<<endl;
+                //     }
+                //     // RBFGen.at(j) = 0;
+
+                //     RBFGen.at(chosen).at(j) = 0;
+                //     RBFGen.at(1 - chosen).at(j) = 1;
+
+                // } else {
+                //     if(DEBUG_VERBOSE){
+                //         cout << "RBF[0][" << j << "] = 1"<<endl;
+                //         cout << "RBF[1][" << j << "] = 0"<<endl;
+                //     }
+                //     // RBFGen.at(j) = 1;
+
+                //     RBFGen.at(1 - chosen).at(j) = 1;
+                // }
 
                 if(DEBUG_VERBOSE)
                     cout<<endl; 
@@ -62,11 +82,13 @@ class RBF {
             
             // Print array after insertion
             if(DEBUG) {
-                cout<<"RBF Init: ";
-                for(int i = 0; i < int(RBFGen.capacity()); i++) {
-                    cout << RBFGen.at(i);
+                cout << "RBF Init: " << endl;
+                for(int i = 0; i < RBFGen.size(); i++) {
+                    for (int j = 0; j < RBFGen[i].size(); j++) {
+                        cout << RBFGen[i][j] << " ";
+                    }
+                    cout << endl;
                 }
-                cout<<endl;
             }           
         }
         
@@ -188,7 +210,7 @@ vector<string> generate_IPs() {
  * @param curr_IP
  * @return 1 on success; 0 on failure
 */
-void insert(RBF curr_RBF, string IP, int i){
+void insert(RBF &curr_RBF, string IP, int i){
     int H, h_i, row, col;
     
     // H(h_key(i||IP)) determines chosen cell
@@ -200,6 +222,8 @@ void insert(RBF curr_RBF, string IP, int i){
     
     // Calculate H(h_i)
     H = curr_RBF.H(to_string(h_i));
+    if(DEBUG)
+        cout << "H: " << H << endl;
 
      /**
      * CHOSEN CELLS ARE ONE
@@ -209,20 +233,39 @@ void insert(RBF curr_RBF, string IP, int i){
      * CASE 2: H(j)=1
      *      RBF[0][j]=0
      *      RBF[1][j]=1
-    */
-    if(H == 0) {
-        if(DEBUG_VERBOSE) {
-            cout << "RBF[0][" << i << "] = 0"<<endl;
-            cout << "RBF[1][" << i << "] = 1"<<endl;
-        }
-        curr_RBF.RBFGen.at(i) = 1;
-    } else {
-        if(DEBUG_VERBOSE){
-            cout << "RBF[0][" << i << "] = 1"<<endl;
-            cout << "RBF[1][" << i << "] = 0"<<endl;
-        }
-        curr_RBF.RBFGen.at(i) = 0;
+     **/
+
+    // Insert only if the number of entries for the column is 0
+    if (curr_RBF.RBFGen[RBF_ROW_COUNT - 1][h_i] == 0) {
+        curr_RBF.RBFGen[H][h_i] = 1;
+        curr_RBF.RBFGen[1 - H][h_i] = 0;
+
+        // Increment entry to 1 at the given column to
+        // indicate an IP is inserted
+        curr_RBF.RBFGen[RBF_ROW_COUNT - 1][h_i] = 1;
+
     }
+
+    // if(H == 0) {
+    //     if(DEBUG_VERBOSE) {
+    //         cout << "RBF[0][" << i << "] = 0"<<endl;
+    //         cout << "RBF[1][" << i << "] = 1"<<endl;
+    //     }
+    //     cout << curr_RBF.RBFGen[H][h_i] << endl;
+
+    //     // curr_RBF.RBFGen.at(i) = 1;
+    //     curr_RBF.RBFGen[H][h_i] = 1;
+
+    //     cout << curr_RBF.RBFGen[H][h_i] << endl;
+
+    // } else {
+    //     if(DEBUG_VERBOSE){
+    //         cout << "RBF[0][" << i << "] = 1"<<endl;
+    //         cout << "RBF[1][" << i << "] = 0"<<endl;
+    //     }
+    //     // curr_RBF.RBFGen.at(i) = 0;
+    //     curr_RBF.RBFGen[1 - H][h_i] = 0;
+    // }
 }
 
 /**
@@ -294,9 +337,19 @@ int main(int argc, char *argv[])
 
     // Put the RBF here
     output << "Final output: \n";
-    for(int i = 0; i < RBF_init_val; i++) {
-        output << RBFGen.RBFGen.at(i);
+    // for(int i = 0; i < RBF_init_val; i++) {
+    //     output << RBFGen.RBFGen.at(i);
+    // }
+
+    if (DEBUG) {
+        for(int i = 0; i < RBF_ROW_COUNT; i++) {
+            for (int j = 0; j < RBF_init_val; j++) {
+                cout << RBFGen.RBFGen[i][j] << " ";
+            }
+            cout << endl;
+        }
     }
+
     output.close();
 
     return 0;
