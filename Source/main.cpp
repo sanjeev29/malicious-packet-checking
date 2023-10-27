@@ -7,130 +7,12 @@
 #include <stdbool.h>
 
 #include "sha256.h"
+#include "RBFGen.h"
 
 // Changed to this to simplify it
 using namespace std;
 
 const bool DEBUG = false; // Used for debugging
-const bool DEBUG_VERBOSE = false; // Used for extensive debugging
-const int RBF_MAX_ROWS = 3; // The third row tracks the number of entries for a particular column
-
-class RBF {
-    public:
-        int m;
-
-        // Initialize a 2D vector
-        vector<vector<int> > RBFGen;
-
-        // Constructor
-        RBF(int user_input) {
-            m = user_input;
-
-            // Resize the 2D vector
-            RBFGen.resize(RBF_MAX_ROWS, vector<int>(m));
-            
-            // Initialize RBF
-            for(int j = 0; j < m; j++) {
-                // Calculate chosen row index using H(j)
-                int chosen;
-                chosen = H(to_string(j));
-                
-                if(DEBUG_VERBOSE)
-                    cout << "Chosen is " << chosen << endl;
-                
-                /**
-                 * CHOSEN CELLS ARE ZERO
-                 * CASE 1: H(j)=0
-                 *      RBF[0][j]=0
-                 *      RBF[1-0][j]=1
-                 * CASE 2: H(j)=1
-                 *      RBF[0][j]=1
-                 *      RBF[1][j]=0
-                */
-
-                RBFGen.at(chosen).at(j) = 0;
-                RBFGen.at(1 - chosen).at(j) = 1;
-
-                if(DEBUG_VERBOSE)
-                    cout<<endl; 
-            }
-            
-            // Print array after insertion
-            if(DEBUG) {
-                cout << "RBF Init: " << endl;
-                for(int i = 0; i < RBFGen.size(); i++) {
-                    for (int j = 0; j < RBFGen[i].size(); j++) {
-                        cout << RBFGen[i][j] << " ";
-                    }
-                    cout << endl;
-                }
-            }           
-        }
-        
-
-        /**
-         * H(.) to determine chosen; specific implementation is sha256("0"||input) mod 2.
-         * @param index
-         * @return Success: 1 or 0, Fail: -1
-        */
-        int H(string input) {
-            int val = -1;
-
-            // Perform key||input, || indicates concatentation
-            string input_cat = "0" + input;
-
-            // Begin SHA256(key||ip) (mod m)
-            string sha_no_trunc = sha256(input_cat);
-            
-            // Truncate
-            int K = 20;
-
-            string lsbHexStr = sha_no_trunc.substr(sha_no_trunc.length() - K / 4);
-            int lsbInt = stoi(lsbHexStr, 0, 16);
-
-            // Modulus
-            val = lsbInt % 2;
-
-            return val;
-        }
-
-        /**
-         * Keyed hash function. In theory, it should work. In reality, it has not been tested heavily.
-         * @param key 1 through 8
-         * @param input "Indeed, the “input” should be a column number in string format" (on assignment description)
-         * @param m needed for modulus calculation; function needs to be refactored I think
-         * @return index
-        */
-        int h_i(string key, string input) {
-            int index = -1; // If it returns -1, we know the hash failed.
-
-            // Perform key||input, || indicates concatentation
-            string input_cat = key + input;
-
-            // Begin SHA256(key||ip) (mod m)
-            string sha_no_trunc = sha256(input_cat);
-            
-            // Consider least significant 20-bit
-            int K = 20;
-
-            // Truncate
-            string lsbHexStr = sha_no_trunc.substr(sha_no_trunc.length() - K / 4);
-            int lsbInt = stoi(lsbHexStr, 0, 16);
-
-            // Modulus
-            index = lsbInt % m;
-
-            if(DEBUG) {
-                cout << "size: " << sha_no_trunc.length() << endl;
-                cout << "sha256('"<< input << "'):" << sha_no_trunc << endl;
-                cout << "trunc_val: " << lsbHexStr.length() << " " << lsbHexStr << endl;
-                cout << "int: " << lsbHexStr << endl;
-                cout << "index: " << index << endl;
-            }
-
-            return index;   
-        }
-};
 
 /**
  * Generate all the bad IP addresses
@@ -183,48 +65,6 @@ vector<string> generate_IPs() {
 
     return bad_ips;
 }
-            
-/**
- * Insert a single IP
- * @param curr_RBF
- * @param curr_IP
- * @return 1 on success; 0 on failure
-*/
-void insert(RBF &curr_RBF, string IP, int i){
-    int H, h_i;
-    
-    // H(h_key(i||IP)) determines chosen cell
-    
-    // Calculate h_i
-    h_i = curr_RBF.h_i(to_string(i), IP);
-    if(DEBUG)
-        cout << "h_i: " << h_i << endl;
-    
-    // Calculate H(h_i)
-    H = curr_RBF.H(to_string(h_i));
-    if(DEBUG)
-        cout << "H: " << H << endl;
-
-     /**
-     * CHOSEN CELLS ARE ONE
-     * CASE 1: H(j)=0
-     *      RBF[0][j]=1
-     *      RBF[1-0][j]=0
-     * CASE 2: H(j)=1
-     *      RBF[0][j]=0
-     *      RBF[1][j]=1
-     **/
-
-    // Insert only if the number of entries for the column is 0
-    if (curr_RBF.RBFGen[RBF_MAX_ROWS - 1][h_i] == 0) {
-        curr_RBF.RBFGen[H][h_i] = 1;
-        curr_RBF.RBFGen[1 - H][h_i] = 0;
-
-        // Increment entry to 1 at the given column to
-        // indicate an IP is inserted
-        curr_RBF.RBFGen[RBF_MAX_ROWS - 1][h_i] = 1;
-    }
-}
 
 /**
  * Output data to a file
@@ -249,7 +89,7 @@ void output_to_file(string filePath, vector<int> data) {
 void insert_bad_IPs(RBF &curr_RBF, vector<string> IPs) {
     for (int i = 0; i < IPs.size(); i++) {
         for (int k = 1; k < 9; k++) {
-            insert(curr_RBF, IPs[i], k);
+            curr_RBF.Insert(IPs[i], k);
         }
     }
 }
@@ -297,21 +137,33 @@ int main(int argc, char *argv[])
     }
 
     // Create RBF
-    RBF RBFGen(RBF_init_val);
+    RBF RBF(RBF_init_val);
+
+    // Print array after insertion
+	if(DEBUG) {
+	    cout << "RBF Init: " << endl;
+		for(int i = 0; i < RBF.RBFGen.size(); i++) {
+			for (int j = 0; j < RBF.m; j++) {
+				cout << RBF.RBFGen[i][j] << " ";
+			}
+			cout << endl;
+		}
+	}
 
     // Generate IPs
     vector<string> IPs = generate_IPs();
 
     // Insert 10,000 IPs to RBF
-    insert_bad_IPs(RBFGen, IPs);
+    insert_bad_IPs(RBF, IPs);
 
     // Insert RBF to <filename>.txt
-    output_to_file("Results/"+filename, RBFGen.RBFGen[0]);
+    output_to_file("Results/"+filename, RBF.RBFGen[0]);
 
     if (DEBUG) {
+        cout << "RBF Out: " << endl;
         for(int i = 0; i < RBF_MAX_ROWS; i++) {
             for (int j = 0; j < RBF_init_val; j++) {
-                cout << RBFGen.RBFGen[i][j] << " ";
+                cout << RBF.RBFGen[i][j] << " ";
             }
             cout << endl;
         }
