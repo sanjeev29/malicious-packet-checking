@@ -115,58 +115,96 @@ int main(int argc, char *argv[])
         return -1;
     }
     
-    string m = argv[1];
-    int RBF_init_val;
+    string exe = argv[0];
 
-    // Validate user input for m
-    try {
-        RBF_init_val = stoi(m);
-    } catch(...) {
-        cout << "ERROR: Cannot convert " << m << " to an integer" << endl;
-        return -1;
-    }
+    if(exe.compare("./RBFGen") == 0){
+        string m = argv[1];
+        int RBF_init_val;
 
-    // Validate user input for output file name
-    string filename = argv[2];
-    try {
-        if(filename.find(".txt") == string::npos)
-            throw(filename);
-    } catch (string bad_filename) {
-        cout << "ERROR: Must provide valid output file name" << endl;
-        return -1;
-    }
-
-    // Create RBF
-    RBF RBF(RBF_init_val);
-
-    // Print array after insertion
-	if(DEBUG) {
-	    cout << "RBF Init: " << endl;
-		for(int i = 0; i < RBF.RBFGen.size(); i++) {
-			for (int j = 0; j < RBF.m; j++) {
-				cout << RBF.RBFGen[i][j] << " ";
-			}
-			cout << endl;
-		}
-	}
-
-    // Generate IPs
-    vector<string> IPs = generate_IPs();
-
-    // Insert 10,000 IPs to RBF
-    insert_bad_IPs(RBF, IPs);
-
-    // Insert RBF to <filename>.txt
-    output_to_file("Results/"+filename, RBF.RBFGen[0]);
-
-    if (DEBUG) {
-        cout << "RBF Out: " << endl;
-        for(int i = 0; i < RBF_MAX_ROWS; i++) {
-            for (int j = 0; j < RBF_init_val; j++) {
-                cout << RBF.RBFGen[i][j] << " ";
-            }
-            cout << endl;
+        // Validate user input for m
+        try {
+            RBF_init_val = stoi(m);
+        } catch(...) {
+            cout << "ERROR: Cannot convert " << m << " to an integer" << endl;
+            return -1;
         }
+
+        // Validate user input for output file name
+        string filename = argv[2];
+        try {
+            if(filename.find(".txt") == string::npos)
+                throw(filename);
+        } catch (string bad_filename) {
+            cout << "ERROR: Must provide valid output file name" << endl;
+            return -1;
+        }
+
+        // Create RBF
+        RBF RBF(RBF_init_val);
+
+        // Print array after insertion
+        if(DEBUG) {
+            cout << "RBF Init: " << endl;
+            for(int i = 0; i < RBF.RBFGen.size(); i++) {
+                for (int j = 0; j < RBF.m; j++) {
+                    cout << RBF.RBFGen[i][j] << " ";
+                }
+                cout << endl;
+            }
+        }
+
+        // Generate IPs
+        vector<string> IPs = generate_IPs();
+
+        // Insert 10,000 IPs to RBF
+        insert_bad_IPs(RBF, IPs);
+
+        // Insert RBF to <filename>.txt
+        output_to_file("Results/"+filename, RBF.RBFGen[0]);
+
+        if (DEBUG) {
+            cout << "RBF Out: " << endl;
+            for(int i = 0; i < RBF_MAX_ROWS; i++) {
+                for (int j = 0; j < RBF_init_val; j++) {
+                    cout << RBF.RBFGen[i][j] << " ";
+                }
+                cout << endl;
+            }
+        }
+    } else {
+        // Validate user input for output file name
+        string filename = argv[1];
+        try {
+            if(filename.find(".txt") == string::npos)
+                throw(filename);
+        } catch (string bad_filename) {
+            cout << "ERROR: Must provide valid output file name" << endl;
+            return -1;
+        }
+
+        // Get the size
+        int end = filename.find(".txt");
+        int size = stoi(filename.substr(0, end));
+
+        RBF RBFCheck(size);
+
+        // Read in from the file
+        fstream fin(filename, fstream::in);
+        int curr;
+        char c;
+        int counter = 0;
+        while(c << fin.get()) {
+            cout<<c<<endl;
+            curr = c;
+            RBFCheck.RBFGen[0][counter] = curr;
+            counter++;
+        }
+
+        for(int i = 0; i < size; i++) {
+            cout<< RBFCheck.RBFGen[0][i];
+        }
+        cout<<endl;
+        
     }
 
     return 0;
