@@ -72,14 +72,19 @@ vector<string> generate_IPs() {
 
 void output_to_file(string filePath, vector<int> data) {
     fstream output;
+    fstream output2;
+    
     output.open(filePath, fstream::out | fstream::trunc);
+    output2.open("Result/", fstream::out | fstream::trunc);
 
     // Output given data to a file
     for(int i = 0; i < data.size(); i++) {
         output << data[i];
+        output2 << data[i];
     }
 
     output.close();
+    output2.close();
 }
 
 /**
@@ -160,7 +165,7 @@ int main(int argc, char *argv[])
         insert_bad_IPs(RBF, IPs);
 
         // Insert RBF to <filename>.txt
-        output_to_file("Results/"+filename, RBF.RBFGen[0]);
+        output_to_file(filename, RBF.RBFGen[0]);
 
         if (DEBUG) {
             cout << "RBF Out: " << endl;
@@ -193,18 +198,11 @@ int main(int argc, char *argv[])
         int curr;
         char c;
         int counter = 0;
-        while(c << fin.get()) {
-            cout<<c<<endl;
+        while(fin.get(c)) {    
             curr = c;
             RBFCheck.RBFGen[0][counter] = curr;
             counter++;
         }
-
-        for(int i = 0; i < size; i++) {
-            cout<< RBFCheck.RBFGen[0][i];
-        }
-        cout<<endl;
-        
     }
 
     return 0;
