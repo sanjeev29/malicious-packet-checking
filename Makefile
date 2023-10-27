@@ -3,7 +3,7 @@ CC = g++
 
 # Define compiler flags
 CFLAGS = -g -Wall
-SRC = Source/main.cpp Source/RBFGen.cpp Source/sha256.cpp
+SRC = Source/main.cpp Source/RBFGen.cpp Source/sha256.cpp Source/IPCheck.cpp
 IP_SRC = Source/main.cpp Source/RBFGen.cpp Source/sha256.cpp Source/IPCheck.cpp
 
 # Both have to be run separate

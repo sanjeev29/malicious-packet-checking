@@ -1,10 +1,19 @@
 # malicious-packet-checking
 Malicious Packet Checking
 
-Values
+Values (rounded, but calclated using graphing calculator)
 ---------------
 m1 = -k*n / ln(1 - P^(1/k))
-   = (-8 * 10000) / ln(1 - .005^(1/8))
-   = 110347
+   = (-8 * 10000) / ln(1 - .0001^(1/8))
+   = 210454.09
 
-We know the space cost for a list is 13 bytes -- one space for each char. We know RBF are bit arrays of m bits (0 or 1). We are given each cell only takes up 1 bit of space. Therefore, we know that 13 bytes -> 13 bits = 
+m2 = -k*n / ln(1 - P^(1/k))
+   = (-8 * 10000) / ln(1 - .001^(1/8))
+   = 146076.97
+
+1,040,000 = 13 character * 8 bytes * 10,000 IPS
+
+c1 = 1,040,000 / m1
+   = 4.94
+c2 = 1,040,000 / m2
+   = 7.12
