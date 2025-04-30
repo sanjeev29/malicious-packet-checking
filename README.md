@@ -1,6 +1,6 @@
 # Malicious Packet Checking
 
-Malicious Packet Checking is a C++ project designed to identify and manage malicious IP addresses using advanced algorithms like SHA256 and the Recursive Bloom Filter (RBF). The repository provides functionalities to generate and embed malicious IP addresses into a Bloom Filter, ensuring efficient storage and retrieval.
+Malicious Packet Checking is a C++ project designed to identify and manage malicious IP addresses using advanced algorithms like SHA256 and the Random Bloom Filter (RBF). The repository provides functionalities to generate and embed malicious IP addresses into a Bloom Filter, ensuring efficient storage and retrieval.
 
 ## How It Works
 
